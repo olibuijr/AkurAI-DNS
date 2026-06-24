@@ -152,14 +152,14 @@ impl Zone {
                             .value
                             .parse()
                             .map_err(|e| format!("Bad A record '{}': {e}", entry.value))?;
-                        (TYPE_A, Record::new_a(&fqdn, entry_ttl, ip))
+                        (TYPE_A, Record::new_a(&fqdn, entry_ttl, ip.octets()))
                     }
                     "AAAA" => {
                         let ip: std::net::Ipv6Addr = entry
                             .value
                             .parse()
                             .map_err(|e| format!("Bad AAAA record '{}': {e}", entry.value))?;
-                        (TYPE_AAAA, Record::new_aaaa(&fqdn, entry_ttl, ip))
+                        (TYPE_AAAA, Record::new_aaaa(&fqdn, entry_ttl, ip.octets()))
                     }
                     "CNAME" => (
                         TYPE_CNAME,

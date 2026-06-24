@@ -47,29 +47,44 @@ info "Binary built: ${BINARY} (${BINARY_SIZE})"
 
 # ── Upload ────────────────────────────────────────────────────────────
 info "Uploading binary to ${REMOTE_HOST}"
-scp "$BINARY" "${REMOTE_HOST}:${REMOTE_BIN}.new"
+scp -q "$BINARY" "${REMOTE_HOST}:/tmp/akurai-dns-bin"
 
 info "Uploading zone files"
-ssh "$REMOTE_HOST" "mkdir -p ${REMOTE_ZONE_DIR}"
-
-# Backup existing zones
-ssh "$REMOTE_HOST" "
-    if [ -d ${REMOTE_ZONE_DIR} ] && ls ${REMOTE_ZONE_DIR}/*.toml &>/dev/null; then
-        BACKUP_DIR=/etc/akurai-dns/backups/\$(date +%Y%m%d-%H%M%S)
-        mkdir -p \$BACKUP_DIR
-        cp ${REMOTE_ZONE_DIR}/*.toml \$BACKUP_DIR/
-        echo 'Zones backed up to '\$BACKUP_DIR
-    fi
-"
-
-scp zones/*.toml "${REMOTE_HOST}:${REMOTE_ZONE_DIR}/"
+scp -q zones/*.toml "${REMOTE_HOST}:/tmp/"
 
 # ── Install ───────────────────────────────────────────────────────────
 info "Installing binary and systemd service"
 
-# Generate systemd unit locally, upload it
-UNIT_FILE=$(mktemp)
-cat > "$UNIT_FILE" << EOF
+ssh "$REMOTE_HOST" "sudo bash -s" << 'INSTALL'
+set -euo pipefail
+
+# Install binary
+install -m 755 /tmp/akurai-dns-bin /usr/local/bin/akurai-dns
+rm -f /tmp/akurai-dns-bin
+
+# Setup zone directory + backup
+mkdir -p /etc/akurai-dns/zones
+if ls /etc/akurai-dns/zones/*.toml &>/dev/null; then
+    BACKUP_DIR=/etc/akurai-dns/backups/$(date +%Y%m%d-%H%M%S)
+    mkdir -p "$BACKUP_DIR"
+    cp /etc/akurai-dns/zones/*.toml "$BACKUP_DIR/"
+    echo "  Zones backed up to $BACKUP_DIR"
+fi
+
+# Install zone files
+mv /tmp/*.toml /etc/akurai-dns/zones/ 2>/dev/null || true
+
+# Check if systemd-resolved is hogging port 53
+if ss -tlnp | grep -q ':53 ' 2>/dev/null; then
+    echo "  Stopping systemd-resolved to free port 53"
+    systemctl stop systemd-resolved 2>/dev/null || true
+    systemctl disable systemd-resolved 2>/dev/null || true
+    # Ensure /etc/resolv.conf points somewhere useful
+    echo "nameserver 1.1.1.1" > /etc/resolv.conf
+fi
+
+# Install systemd unit
+cat > /etc/systemd/system/akurai-dns.service << 'UNIT'
 [Unit]
 Description=AkurAI Authoritative DNS Server
 After=network.target
@@ -77,8 +92,8 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-ExecStart=${REMOTE_BIN}
-Environment=DNS_ZONE_DIR=${REMOTE_ZONE_DIR}
+ExecStart=/usr/local/bin/akurai-dns
+Environment=DNS_ZONE_DIR=/etc/akurai-dns/zones
 Environment=DNS_LISTEN=0.0.0.0
 Environment=DNS_PORT=53
 Environment=RUST_LOG=info
@@ -89,23 +104,17 @@ NoNewPrivileges=true
 ProtectSystem=strict
 ReadWritePaths=/etc/akurai-dns
 ProtectHome=true
-ExecReload=/bin/kill -HUP \$MAINPID
+ExecReload=/bin/kill -HUP $MAINPID
 
 [Install]
 WantedBy=multi-user.target
-EOF
+UNIT
 
-scp "$UNIT_FILE" "${REMOTE_HOST}:/etc/systemd/system/${REMOTE_SERVICE}.service"
-rm -f "$UNIT_FILE"
-
-ssh "$REMOTE_HOST" "
-    mv ${REMOTE_BIN}.new ${REMOTE_BIN}
-    chmod +x ${REMOTE_BIN}
-    systemctl daemon-reload
-    systemctl enable ${REMOTE_SERVICE}
-    systemctl restart ${REMOTE_SERVICE}
-    echo 'Service restarted'
-"
+systemctl daemon-reload
+systemctl enable akurai-dns
+systemctl restart akurai-dns
+echo "  Service restarted"
+INSTALL
 
 # ── Healthcheck ───────────────────────────────────────────────────────
 info "Running healthcheck (waiting 2s for startup)"

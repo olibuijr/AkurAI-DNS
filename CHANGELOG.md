@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1 (2026-06-24)
+
+- Deployed to akurai-mail
+
 ## 0.1.0 (2026-06-24)
 
 - Initial release

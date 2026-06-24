@@ -2,12 +2,12 @@
 name = "akurai-dns"
 version = "0.1.0"
 edition = "2024"
-description = "Minimal authoritative DNS server in pure Rust"
+description = "Production-grade authoritative DNS server in pure Rust"
 license = "MIT"
 repository = "https://github.com/olibuijr/akurai-dns"
 
 [dependencies]
-tokio = { version = "1", features = ["full"] }
+tokio = { version = "1", features = ["full", "signal"] }
 toml = "0.8"
 serde = { version = "1", features = ["derive"] }
 tracing = "0.1"

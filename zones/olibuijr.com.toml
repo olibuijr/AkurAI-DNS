@@ -1,0 +1,65 @@
+[zone]
+name = "olibuijr.com."
+ttl = 3600
+
+[soa]
+mname = "ns1.olibuijr.com."
+rname = "admin.olibuijr.com."
+serial = 2026062401
+refresh = 3600
+retry = 900
+expire = 604800
+minimum = 300
+
+[[ns]]
+name = "ns1.olibuijr.com."
+
+[[ns]]
+name = "ns2.olibuijr.com."
+
+# Root domain
+[[record]]
+name = "@"
+type = "A"
+value = "3.94.46.219"
+
+# Nameservers (glue)
+[[record]]
+name = "ns1"
+type = "A"
+value = "3.94.46.219"
+
+[[record]]
+name = "ns2"
+type = "A"
+value = "3.94.46.219"
+
+# Mail
+[[record]]
+name = "mail"
+type = "A"
+value = "3.94.46.219"
+
+[[record]]
+name = "@"
+type = "MX"
+priority = 10
+value = "mail.olibuijr.com."
+
+# Auth / IDP
+[[record]]
+name = "auth"
+type = "A"
+value = "3.94.46.219"
+
+# Vault
+[[record]]
+name = "vault"
+type = "A"
+value = "3.94.46.219"
+
+# SPF
+[[record]]
+name = "@"
+type = "TXT"
+value = "v=spf1 ip4:3.94.46.219 mx -all"

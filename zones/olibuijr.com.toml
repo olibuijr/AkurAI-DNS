@@ -1,11 +1,11 @@
 [zone]
 name = "olibuijr.com."
-ttl = 3600
+ttl = 900
 
 [soa]
 mname = "ns1.olibuijr.com."
 rname = "admin.olibuijr.com."
-serial = 2026062401
+serial = 2026062402
 refresh = 3600
 retry = 900
 expire = 604800
@@ -17,9 +17,15 @@ name = "ns1.olibuijr.com."
 [[ns]]
 name = "ns2.olibuijr.com."
 
-# Root domain
+# Root domain — points to EC2
 [[record]]
 name = "@"
+type = "A"
+value = "3.94.46.219"
+
+# www
+[[record]]
+name = "www"
 type = "A"
 value = "3.94.46.219"
 
@@ -63,3 +69,21 @@ value = "3.94.46.219"
 name = "@"
 type = "TXT"
 value = "v=spf1 ip4:3.94.46.219 mx -all"
+
+# Brevo verification
+[[record]]
+name = "@"
+type = "TXT"
+value = "brevo-code:6860f36888d46dad70f5ac482e5e6c51"
+
+# DMARC
+[[record]]
+name = "_dmarc"
+type = "TXT"
+value = "v=DMARC1; p=quarantine; rua=mailto:postmaster@olibuijr.com"
+
+# DKIM
+[[record]]
+name = "mail._domainkey"
+type = "TXT"
+value = "v=DKIM1;h=sha256;k=rsa;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAteJf8l+9kiY9crXFycUTxLmsoEgn6yqoq18Zu64JeDItpR33q9QFvWfUL17fiytAd7vk2F3AN4Up0i5M7/n+APrTWIm1JSJyyYWmoFze4oGsvN2kFLJJk99MJr3TnuVj/eFKISOaH4lRmy41kG6J1R5X+S+OTlefGGPCOUy1LETBXoFYy/OE/xCc+8KZx0V+oSwg46lmQoM1I828+attYgDr1IZFNs1gDt45FxZriHVWPK5/8CtcAR27Ufe9F8yzdIUPuHnXLPR8+xgAundhDk83gRdIF3VAvGFWYZN3m8Hs7d8fS7Mn586cS5ahv3CkxGPX5XZZsamh4e7aVV/DCwIDAQAB"

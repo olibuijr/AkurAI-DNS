@@ -1,0 +1,39 @@
+[zone]
+name = "golfsetridak.is."
+ttl = 3600
+
+[soa]
+mname = "ns1.olibuijr.com."
+rname = "admin.olibuijr.com."
+serial = 2026062401
+refresh = 3600
+retry = 900
+expire = 604800
+minimum = 300
+
+[[ns]]
+name = "ns1.olibuijr.com."
+
+[[ns]]
+name = "ns2.olibuijr.com."
+
+[[record]]
+name = "@"
+type = "A"
+value = "3.94.46.219"
+
+[[record]]
+name = "www"
+type = "CNAME"
+value = "golfsetridak.is."
+
+[[record]]
+name = "@"
+type = "MX"
+priority = 10
+value = "mail.olibuijr.com."
+
+[[record]]
+name = "@"
+type = "TXT"
+value = "v=spf1 ip4:3.94.46.219 mx -all"
